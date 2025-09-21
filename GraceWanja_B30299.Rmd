@@ -1,0 +1,140 @@
+---
+title: "IDA Credit Analysis Uganda"
+author: "GRACE WANJA B30299"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r setup-libraries}
+# 1: install (only if needed) and load libraries
+pkgs <- c("tidyverse", "readr", "lubridate", "scales")
+install.packages(pkgs[!pkgs %in% installed.packages()], quiet = TRUE)
+
+library(tidyverse)
+library(readr)
+library(lubridate)
+library(scales)
+```
+
+## Question 1: Time-Series Analysis of World Bank Fund Disbursement to Uganda
+
+```{r time-series}
+# Load the dataset
+uganda_data <- read_csv("ida_credits_to_uganda_09-20-2025.csv")
+
+# Convert date column to proper format
+uganda_data$`Board Approval Date` <- as.Date(uganda_data$`Board Approval Date`, format = "%m/%d/%Y")
+
+# Plot disbursed amounts over time
+ggplot(uganda_data, aes(x = `Board Approval Date`, y = `Disbursed Amount (US$)`)) +
+  geom_line(color = "blue") +
+  geom_point(size = 1, color = "red") +
+  labs(title = "Trend of World Bank Disbursements to Uganda",
+       x = "Year",
+       y = "Disbursed Amount (US$)") +
+  theme_minimal()
+```
+The time-series plot above shows the trend of disbursed funds (US$) from the World Bank to Uganda between the 1970s and 2024.
+
+Early years (1970s–1980s): Disbursements were relatively low and irregular, reflecting the early stages of Uganda’s borrowing and political instability.
+
+1990s–2000s: A gradual increase in disbursements is observed, with fluctuations linked to economic recovery and reforms.
+
+2005 onwards: A strong upward trend emerges, with frequent spikes exceeding 200–300 million USD in a year. This reflects increased support for infrastructure and poverty reduction projects.
+
+2015–2024: Disbursements remain high but volatile, showing alternating peaks and dips, suggesting project-driven funding cycles.
+
+Conclusion:
+Overall, World Bank disbursements to Uganda show a long-term growth trend, with larger and more frequent allocations in recent decades, highlighting Uganda’s growing reliance on concessional financing.
+
+```{r credit-status, echo=TRUE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+# check the column names first if unsure
+# colnames(uganda_data)
+
+# Create summary of Credit Status
+credit_summary <- uganda_data %>%
+  count(`Credit Status`) %>%
+  arrange(desc(n)) %>%
+  mutate(percentage = round(100 * n / sum(n), 2))
+
+# Show the table
+credit_summary
+
+# Plot distribution
+total_n <- sum(credit_summary$n)
+ggplot(credit_summary, aes(x = reorder(`Credit Status`, -n), y = n)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = paste0(n, " (", percentage, "%)")), 
+            vjust = -0.5, size = 3) +
+  labs(title = paste0("Distribution of Credit Status — Uganda (N = ", total_n, ")"),
+       x = "Credit Status", y = "Number of Credits") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+The dataset shows 9 distinct credit statuses for Uganda’s IDA credits. Out of 191 records:
+
+Fully Repaid: 96 credits (≈50.26%)
+
+Repaying: 65 credits (≈34.03%)
+
+Disbursing: 10 credits (≈5.24%)
+
+Disbursing & Repaying: 8 credits (≈4.19%)
+
+Fully Cancelled: 4 credits (≈2.09%)
+
+Approved: 3 credits (≈1.57%)
+
+Fully Disbursed: 2 credits (≈1.05%)
+
+Terminated: 2 credits (≈1.05%)
+
+Effective: 1 credit (≈0.52%)
+
+Interpretation:
+About half of Uganda’s World Bank credits are fully repaid, which demonstrates strong repayment performance. Another third are currently being repaid, highlighting ongoing financial obligations. Around 9% are in active disbursement stages, indicating new or ongoing projects still receiving funds. Only a small portion of credits were cancelled, terminated, or just approved.
+
+Conclusion:
+Uganda has a history of completing and repaying most of its IDA credits while maintaining an active portfolio of ongoing disbursements and repayments. This reflects both a track record of debt servicing and continuing reliance on concessional finance for development.
+
+## Question 3: Original Principal Amount
+
+```{r original-principal}
+# Summarize Original Principal Amount by year
+uganda_data$Year <- lubridate::year(as.Date(uganda_data$`End of Period`, format = "%m/%d/%Y"))
+
+principal_summary <- uganda_data %>%
+  group_by(Year) %>%
+  summarise(
+    Total_Principal = sum(`Original Principal Amount (US$)`, na.rm = TRUE),
+    Avg_Principal   = mean(`Original Principal Amount (US$)`, na.rm = TRUE),
+    Count           = n()
+  )
+
+principal_summary
+```
+
+The analysis shows that in 2025, Uganda’s **total original principal amount** borrowed from the World Bank was about **11.88 billion US$**.  
+On average, each loan or credit facility had an **original principal of about 62 million US$**, across **191 entries**.  
+
+**Patterns and deductions:**  
+- Borrowing is **concentrated in 2025** in the dataset snapshot.  
+- The total is spread across **many smaller loans** instead of a few very large loans.  
+- This reflects Uganda’s reliance on **multiple concessional credits** to support a variety of development projects.  
+- The borrowing pattern suggests **diversification of financing** rather than dependence on a single large facility.  
+
+# Conclusion
+
+In summary, Uganda’s credit performance with the World Bank shows that the majority of loans have been fully repaid, although a significant proportion are still under repayment. The analysis of credit status highlights Uganda’s commitment to meeting its obligations despite ongoing projects. Furthermore, the original principal amounts borrowed reveal a steady increase in loan size over the years, reflecting Uganda’s growing financing needs to support development initiatives. These borrowing patterns demonstrate both progress in loan management and the country’s reliance on external financing for infrastructure and economic growth. Overall, Uganda’s loan profile indicates resilience, but also the importance of strengthening domestic resource mobilization to reduce future dependence on external debt.
+
+
+
+
